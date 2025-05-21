@@ -1,3 +1,4 @@
+import 'package:linkifoot/core/utils/logger.dart';
 import 'package:linkifoot/features/user/data/datasources/remote/user_remote_data_source.dart';
 import 'package:linkifoot/features/user/data/models/user_model.dart';
 import 'package:linkifoot/features/user/domain/entities/user_entity.dart';
@@ -92,17 +93,28 @@ class SupabaseUserRemoteDataSource implements UserRemoteDataSource {
 
   @override
   Future<void> signUpUser(UserEntity user) async {
-    final authResponse = await supabase.auth.signUp(
-      email: user.email!,
-      password: user.password!,
-    );
+    try {
+      final authResponse = await supabase.auth.signUp(
+        email: user.email!,
+        password: user.password!,
+      );
 
-    final supabaseUser = authResponse.user;
-    if (supabaseUser == null) throw Exception("Failed to sign up user");
+      final supabaseUser = authResponse.user;
+      if (supabaseUser == null) throw Exception("Failed to sign up user");
 
-    final userModel = UserModel.fromEntity(user).copyWith(uid: supabaseUser.id);
+      final userModel = UserModel.fromEntity(user)
+          .copyWith(uid: supabaseUser.id, name: user.name);
 
-    await supabase.from('users').insert(userModel.toJson());
+      AppLogger.logger
+          .i("UserModel: ${userModel.toJson()}"); // Log the user model
+
+      await supabase.from('users').insert(userModel.toJson()).select();
+    } catch (e, stackTrace) {
+      AppLogger.logger.e(
+        'Sign up failed: $e',
+      );
+      throw Exception("Sign up failed: ${e.toString()}");
+    }
   }
 
   @override
@@ -112,5 +124,23 @@ class SupabaseUserRemoteDataSource implements UserRemoteDataSource {
         .from('users')
         .update(userModel.toJson())
         .eq('uid', user.uid as String);
+  }
+
+  @override
+  Stream<List<UserModel>> getSingleUser(String uid) {
+    return supabase
+        .from('users')
+        .stream(primaryKey: ['uid'])
+        .eq('uid', uid)
+        .limit(1)
+        .map((data) => data.map((e) => UserModel.fromMap(e)).toList());
+  }
+
+  @override
+  Stream<List<UserModel>> getUsers(UserEntity user) {
+    return supabase
+        .from('users')
+        .stream(primaryKey: ['uid']) // or 'uuid', depending on your DB setup
+        .map((data) => data.map((e) => UserModel.fromMap(e)).toList());
   }
 }

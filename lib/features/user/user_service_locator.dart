@@ -9,8 +9,11 @@ import 'package:linkifoot/features/user/domain/usecases/credential%20/sign_out_u
 import 'package:linkifoot/features/user/domain/usecases/credential%20/sign_up_user_usecase.dart';
 import 'package:linkifoot/features/user/domain/usecases/user/create_user_usecase.dart';
 import 'package:linkifoot/features/user/domain/usecases/user/follow_unfollow_user_usecase.dart';
+import 'package:linkifoot/features/user/domain/usecases/user/get_single_user_usecase.dart';
 import 'package:linkifoot/features/user/domain/usecases/user/update_user_usecase.dart';
-import 'package:linkifoot/features/user/presentation/cubit/credential_cubit.dart';
+import 'package:linkifoot/features/user/presentation/cubit/auth/auth_cubit.dart';
+import 'package:linkifoot/features/user/presentation/cubit/credential/credential_cubit.dart';
+import 'package:linkifoot/features/user/presentation/cubit/get_single_user/get_single_user_cubit.dart';
 import 'package:linkifoot/service_locator.dart';
 
 Future<void> userServiceLocator() async {
@@ -22,6 +25,18 @@ Future<void> userServiceLocator() async {
     ),
   );
 
+  sl.registerFactory(
+    () => AuthCubit(
+      signOutUseCase: sl.call(),
+      isSignInUseCase: sl.call(),
+      getCurrentUidUseCase: sl.call(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => GetSingleUserCubit(getSingleUserUseCase: sl.call()),
+  );
+
   // * USE CASES INJECTION
   sl.registerLazySingleton(() => SignOutUseCase(repository: sl.call()));
   sl.registerLazySingleton(() => IsSignInUseCase(repository: sl.call()));
@@ -31,7 +46,7 @@ Future<void> userServiceLocator() async {
   sl.registerLazySingleton(() => UpdateUserUseCase(repository: sl.call()));
   // sl.registerLazySingleton(() => GetUsersUseCase(repository: sl.call()));
   sl.registerLazySingleton(() => CreateUserUseCase(repository: sl.call()));
-  // sl.registerLazySingleton(() => GetSingleUserUseCase(repository: sl.call()));
+  sl.registerLazySingleton(() => GetSingleUserUseCase(repository: sl.call()));
   sl.registerLazySingleton(() => FollowUnFollowUseCase(repository: sl.call()));
   // sl.registerLazySingleton(() => GetSingleOtherUserUseCase(repository: sl.call()));
 
