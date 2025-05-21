@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
             title: const Text('Flutter Demo Home Page'),
           ),
           body: const Center(
-            child: Text('Hello World'),
+            child: Text('hello'), // context.l10n.helloWorld
           ),
         ));
   }
